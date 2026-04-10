@@ -1,6 +1,6 @@
-.. Copyright (C) 2017-2025 Maciej Delmanowski <drybjed@gmail.com>
+.. Copyright (C) 2017-2026 Maciej Delmanowski <drybjed@gmail.com>
 .. Copyright (C) 2018-2022 Robin Schneider <ypid@riseup.net>
-.. Copyright (C) 2017-2025 DebOps <https://debops.org/>
+.. Copyright (C) 2017-2026 DebOps <https://debops.org/>
 .. SPDX-License-Identifier: GPL-3.0-or-later
 
 .. _changelog:
@@ -26,6 +26,58 @@ You can read information about required changes between releases in the
 Added
 ~~~~~
 
+:ref:`debops.sshd` role
+'''''''''''''''''''''''
+
+- Add support for post-quantum key exchange algorithms in OpenSSH v9.0+. The
+  role will enable a specific set of key exchange algorithms where available.
+
+Changed
+~~~~~~~
+
+:ref:`debops.slapd` role
+''''''''''''''''''''''''
+
+- The role should now support OpenLDAP v2.6 available on Debian Trixie. Upgrade
+  path of existing OpenLDAP servers managed by DebOps is not tested yet, check
+  the changes in a test environment.
+
+Fixed
+~~~~~
+
+General
+'''''''
+
+- The :file:`lxc_ssh.py` Ansible connection plugin included in DebOps should
+  now work correctly on Python v3.13.
+
+:ref:`debops.sshd` role
+'''''''''''''''''''''''
+
+- Fixed the code used to detect the installed OpenSSH version that selected the
+  preferred key exchange, cipher and MAC algorithms. OpenSSH v10.x+ versions
+  should now be detected correctly.
+
+:ref:`debops.pki` role
+''''''''''''''''''''''
+
+- Don't include the content of the Subject field in the list of domains in
+  a certificate request. This fixes potential issues with the
+  :command:`certbot` command setting wrong certificate name and signature.
+
+- In the :command:`pki-realm` script, ensure that certain :command:`certbot`
+  command options and their arguments are separated with a spaca. This fixes an
+  issue with ACME DNS-01 challenge not being processed correctly.
+
+
+`debops v3.3.0`_ - 2026-03-13
+-----------------------------
+
+.. _debops v3.3.0: https://github.com/debops/debops/compare/v3.2.0...v3.3.0
+
+Added
+~~~~~
+
 New DebOps roles
 ''''''''''''''''
 
@@ -37,6 +89,9 @@ New DebOps roles
   `InfluxDB v2.x`__ time-series database.
 
   .. __: https://www.influxdata.com/products/influxdb/
+
+- The :ref:`debops.pgbadger` role can be used to generate PostgreSQL log
+  reports from local or remote hosts over SSH.
 
 :ref:`debops.core` role
 '''''''''''''''''''''''
@@ -119,12 +174,24 @@ General
   compatible with Python 3.12+ due to removal of the ``distutils`` Python
   dependency, replaced by the ``packaging`` Python module.
 
+- References to the old ``debops.roleXX`` Ansible Collections have been removed
+  from all playbooks, since the project is now contained in a single Ansible
+  Collection.
+
 :ref:`debops.apt` role
 ''''''''''''''''''''''
 
 - The Debian 10 (Buster) release has been archived and removed from Debian
   mirrors. The role will use https://archive.debian.org/debian as the
   repository URL on Debian Buster hosts.
+
+- The role now can manage repository GPG keys directly, stored in the
+  :file:`/etc/apt/keyrings/` directory, bypassing the deprecated
+  ``ansible.builtin.apt_key`` module. Support for the Ansible module is
+  present, but needs to be enabled explicitly.
+
+  Existing role configuration might need to be updated to support new changes,
+  check the role documentation for details.
 
 :ref:`debops.gitlab` role
 '''''''''''''''''''''''''
@@ -146,6 +213,17 @@ General
 - The runner registration method has changed, see the role documentation for
   details.
 
+:ref:`debops.keyring` role
+''''''''''''''''''''''''''
+
+- The role now can manage repository GPG keys directly, stored in the
+  :file:`/etc/apt/keyrings/` directory, bypassing the deprecated
+  ``ansible.builtin.apt_key`` module. Support for the Ansible module is
+  present, but needs to be enabled explicitly.
+
+  Existing role configuration might need to be updated to support new changes,
+  check the role documentation for details.
+
 :ref:`debops.nginx` role
 ''''''''''''''''''''''''
 
@@ -163,6 +241,19 @@ General
   realms will be se to ``0644`` so that other UNIX accounts can read it. This is
   needed by the :command:`acme-tiny` command which is executed on a separate
   UNIX account.
+
+:ref:`debops.postgresql_server` role
+''''''''''''''''''''''''''''''''''''
+
+- The role can now support `pgBadger`__ log analyzer by enabling verbose log
+  output and modifying access to the log files themselves in the
+  :file:`/var/log/postgresql/` directory. This functionality is disabled by
+  default and can be enabled using a role variable.
+
+  .. __: https://pgbadger.darold.net/
+
+- The default log ident string is changed to ``postgresql-<version>-<name>`` to
+  better distinguish different PostgreSQL instances in the system logs.
 
 :ref:`debops.reprepro` role
 '''''''''''''''''''''''''''
@@ -232,6 +323,10 @@ General
 
 - The :file:`tools/dist-upgrade.yml` playbook will not fail anymore during
   :file:`/etc/services` database assembly if no upgrade was performed.
+
+- New DebOps project directories will use fixed Ansible configuration for
+  callback plugins and will default to a YAML output format of the playbook
+  results.
 
 :ref:`debops.apache` role
 '''''''''''''''''''''''''
@@ -348,6 +443,10 @@ General
 
 - The ``bitcoind`` role was removed due to lack of interest by the role
   maintainer.
+
+- The ``profile_tasks.py`` Ansible callback plugin has been removed due to
+  "Unexpected Exception" error on Ansible v2.19. Users should use its upstream
+  alternative, ``ansible.posix.profile_tasks`` plugin.
 
 :ref:`debops.ipxe` role
 '''''''''''''''''''''''
